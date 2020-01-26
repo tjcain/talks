@@ -1,0 +1,103 @@
+Demystifying Context
+30 January 2020
+
+Tom Cain
+tom.cain@pmconnect.co.uk
+github.com/tjcain
+
+* Introduction
+- Context is very powerful, but its use can be daunting for new go programmers.
+- It can help control concurrent go programs, providing timeouts and cancellation.
+- It can be used to pass values, useful for tracing and logging.
+.image img/22.png 350 _
+
+* Concurrency
+
+- Concurrency vs parallelism 
+.code examples/conc
+
+_“Concurrency_is_about_dealing_with_lots_of_things_at_once._Parallelism_is_about_doing_lots_of_things_at_once”_- Rob Pike
+
+* Concurrency in go: goroutines
+.image img/goroutine.jpg
+
+- Goroutines are a way of doing tasks concurrently in golang.
+- Create and run multiple methods or functions concurrently.
+- Golang achieves parallelism by multiplexing goroutines onto multiple OS threads so if one should block, such as while waiting for I/O, others continue to run.
+
+* Goroutines: pingpong
+.code examples/concurrency/main.go /START0 OMIT/,/END0 OMIT/
+.code examples/concurrency/main.go /START1 OMIT/,/END1 OMIT/
+
+* Goroutines: pingpong
+.play examples/concurrency/main.go /START2 OMIT/,/END2 OMIT/
+
+
+# if no internet access uncomment the below
+#*  
+#.background img/1.png
+
+* The Context Package
+.iframe https://golang.org/pkg/context/ 600 1000
+
+*  The Context API
+.code examples/context.go 
+
+* The Context Tree
+.code examples/using_context.go /START5 OMIT/,/END5 OMIT/
+.image img/tree.jpg
+
+* Creating Derived Contexts
+.code examples/using_context.go /START0 OMIT/,/END0 OMIT/
+.code examples/using_context.go /START1 OMIT/,/END1 OMIT/
+.code examples/using_context.go /START2 OMIT/,/END2 OMIT/
+.code examples/using_context.go /START3 OMIT/,/END3 OMIT/
+.code examples/using_context.go /START4 OMIT/,/END4 OMIT/
+
+
+#* Key Implementation Details
+#- Tree of immutable context nodes
+#- Cancellation of a node cancels all sub nodes
+#- Context values are a node
+#- Value lookup goes backwards up the tree
+
+* Bottles of beer..
+.play examples/beer/basic/main.go /START OMIT/,/END OMIT/
+
+* Timing out
+`ctx,` `cancel` `:=` `context.WithTimeout(ctx,` `5` `*` `time.Second)`
+
+.play examples/beer/simplecontext/main.go /START OMIT/,/END OMIT/
+
+* Cancelling derived contexts
+.play examples/beer/fanout/main.go /START OMIT/,/END OMIT/
+
+* Using context.Value()
+.code examples/beer/logs/main.go /START1 OMIT/,/END1 OMIT/
+.play examples/beer/logs/main.go /START2 OMIT/,/END2 OMIT/
+
+* Using context.Value()
+- Define your own `package` `log` for http requests:
+.code examples/beer/logs/log/log.go /START OMIT/,/END OMIT/
+
+* Things to avoid
+- `context.Value()` is fragile, not type safe, uncheckable by the compiler, difficult to understand and therefore test.
+- `context.Value()` should *not* be treated as `kwargs`.
+- do:
+.code examples/avoid.go /START0 OMIT/,/END0 OMIT/
+- avoid:
+.code examples/avoid.go /START1 OMIT/,/END1 OMIT/
+- Avoid using `context.Value()` to store pointers.
+- Avoid using `context.Value()` to store values that influence your program. 
+
+* Summary
+- Replace a background Context using WithCancel, WithDeadline, WithTimeout, or WithValue.
+- When a Context is canceled, all child Contexts derived from it are also canceled.
+- The same Context can be passed to multiple goroutines, they are immutable therefore safe for use in multiple goroutines.
+- Use `context.TODO()` if you are unsure about which Context to use.
+- Use context values only for request-scoped data that crosses API boundaries and not for passing optional parameters to functions.
+
+* The Future of Birmignham Gophers
+- Thank you all for coming!
+- We hope to make this a regular event, and an inclusive, informative community for Birmingham based gophers.
+- If you would like to get involved in future events, be it planning, talking, running a workshop etc please get in touch via the meetup page.
